@@ -21,39 +21,45 @@ struct ContentView: View {
     @State private var attemptedWordles: [String] = []
     @State private var score: Int = 0
     @State private var limit: Int = 5
-    
+
     @State private var errorTitle: String = ""
     @State private var errorMessage: String = ""
     @State private var showingError: Bool = false
 
-    func initGame () {
+    /// Load word library and start game
+    func initGame() {
         if let startWords: String = try? String(contentsOf: Bundle.main.url(forResource: "\(wordleLength)", withExtension: "txt")!) {
             wordSet = Set(startWords.components(separatedBy: .newlines))
             newGame()
         }
     }
-    
-    func newGame () {
+
+    /// Start a new game
+    func newGame() {
         wordle = wordSet.randomElement()!
         guess = ""
         attemptedWordles = []
     }
-    
-    func addNewWord() {
+
+    /// Insert guessed word if it is valid
+    func submitGuess() {
         let result: String = guess.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         if isValid(word: result) {
-                attemptedWordles.insert(result, at: 0)
-                if attemptedWordles.contains(wordle) {
-                    score += result.count
-                    newGame()
-                }else if attemptedWordles.count > limit {
-                    error("You Lose", "The wordle was \(wordle).")
-                    newGame()
-                }
+            attemptedWordles.insert(result, at: 0)
+            if attemptedWordles.contains(wordle) {
+                score += result.count
+                newGame()
+            } else if attemptedWordles.count > limit {
+                error("You Lose", "The wordle was \(wordle).")
+                newGame()
+            }
         }
         guess = ""
     }
 
+    /// Check if the guess qualifies for insertion
+    /// - Parameter word: The user's guess
+    /// - Returns: Boolean indicating whether the guess qualifies
     func isValid(word: String) -> Bool {
         var result: Bool = false
         checker: if word.isEmpty {
@@ -72,7 +78,11 @@ struct ContentView: View {
         }
         return result
     }
-    
+
+    /// Display an error message
+    /// - Parameters:
+    ///   - title: Heading for the error
+    ///   - message: Details of what the error means
     func error(_ title: String, _ message: String) {
         errorTitle = title
         errorMessage = message
@@ -80,7 +90,6 @@ struct ContentView: View {
     }
 
     var body: some View {
-//        NavigationView {
         VStack {
             Text("Wordle")
                 .font(Font.largeTitle)
@@ -94,7 +103,7 @@ struct ContentView: View {
                         .fontDesign(.monospaced)
                         .autocorrectionDisabled(true)
                 }
-                Stepper("Wordle Length: \(wordleLength)", value: $wordleLength, in: 1...22) {_ in 
+                Stepper("Wordle Length: \(wordleLength)", value: $wordleLength, in: 1 ... 22) { _ in
                     initGame()
                 }
                 Button("Get new Word") {
@@ -121,8 +130,7 @@ struct ContentView: View {
                     }
                 }
             }
-//            .navigationTitle(wordle)
-            .onSubmit(addNewWord)
+            .onSubmit(submitGuess)
             .onAppear(perform: initGame)
             .alert(errorTitle, isPresented: $showingError) {
                 Button("OK", role: .cancel) {}
